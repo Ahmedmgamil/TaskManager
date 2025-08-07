@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -70,7 +71,11 @@ const SimpleDateInput = ({ value, onDateChange, placeholder = 'Select date' }) =
 
   return (
     <View>
-      <TouchableOpacity style={styles.dateButton} onPress={openModal}>
+      <TouchableOpacity 
+        style={styles.dateButton} 
+        onPress={openModal}
+        activeOpacity={0.7}
+      >
         <Text style={[styles.dateText, !value && styles.placeholder]}>
           {value ? formatDate(value) : placeholder}
         </Text>
@@ -82,13 +87,22 @@ const SimpleDateInput = ({ value, onDateChange, placeholder = 'Select date' }) =
         transparent
         animationType="slide"
         onRequestClose={() => setShowModal(false)}
-        animationType="slide"
+        statusBarTranslucent={true}
       >
         <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.overlayTouchable}
+            activeOpacity={1}
+            onPress={() => setShowModal(false)}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Date</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
+              <TouchableOpacity 
+                onPress={() => setShowModal(false)}
+                activeOpacity={0.7}
+                style={styles.closeButton}
+              >
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
@@ -106,6 +120,7 @@ const SimpleDateInput = ({ value, onDateChange, placeholder = 'Select date' }) =
                         selectedYear === year && styles.selectedItem
                       ]}
                       onPress={() => setSelectedYear(year)}
+                      activeOpacity={0.7}
                     >
                       <Text style={[
                         styles.selectorText,
@@ -130,6 +145,7 @@ const SimpleDateInput = ({ value, onDateChange, placeholder = 'Select date' }) =
                         selectedMonth === index && styles.selectedItem
                       ]}
                       onPress={() => setSelectedMonth(index)}
+                      activeOpacity={0.7}
                     >
                       <Text style={[
                         styles.selectorText,
@@ -154,6 +170,7 @@ const SimpleDateInput = ({ value, onDateChange, placeholder = 'Select date' }) =
                         selectedDay === day && styles.selectedItem
                       ]}
                       onPress={() => setSelectedDay(day)}
+                      activeOpacity={0.7}
                     >
                       <Text style={[
                         styles.selectorText,
@@ -171,12 +188,14 @@ const SimpleDateInput = ({ value, onDateChange, placeholder = 'Select date' }) =
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowModal(false)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.confirmButton}
                 onPress={handleDateSelect}
+                activeOpacity={0.7}
               >
                 <Text style={styles.confirmButtonText}>Confirm</Text>
               </TouchableOpacity>
@@ -198,6 +217,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#f8f9fa',
+    minHeight: 48,
   },
   dateText: {
     fontSize: 16,
@@ -211,11 +231,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     paddingHorizontal: 20,
+    elevation: 5,
+  },
+  overlayTouchable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 20,
     maxHeight: '80%',
+    elevation: 10,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -229,6 +258,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#2c3e50',
+  },
+  closeButton: {
+    padding: 8,
   },
   dateSelector: {
     flexDirection: 'row',

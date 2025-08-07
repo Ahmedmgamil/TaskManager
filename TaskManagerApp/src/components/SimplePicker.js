@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -13,12 +14,24 @@ const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Sele
   const [showModal, setShowModal] = useState(false);
   
   const selectedItem = items.find(item => item.value === selectedValue);
+
+  const handlePress = () => {
+    console.log('SimplePicker: Button pressed');
+    setShowModal(true);
+  };
+
+  const handleOptionPress = (value) => {
+    console.log('SimplePicker: Option selected:', value);
+    onValueChange(value);
+    setShowModal(false);
+  };
   
   return (
     <View>
       <TouchableOpacity
         style={styles.pickerButton}
-        onPress={() => setShowModal(true)}
+        onPress={handlePress}
+        activeOpacity={0.7}
       >
         <Text style={[styles.pickerText, !selectedItem && styles.placeholder]}>
           {selectedItem ? selectedItem.label : placeholder}
@@ -31,13 +44,22 @@ const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Sele
         transparent
         animationType="slide"
         onRequestClose={() => setShowModal(false)}
-        animationType="slide"
+        statusBarTranslucent={true}
       >
         <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.overlayTouchable}
+            activeOpacity={1}
+            onPress={() => setShowModal(false)}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{placeholder}</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
+              <TouchableOpacity 
+                onPress={() => setShowModal(false)}
+                activeOpacity={0.7}
+                style={styles.closeButton}
+              >
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
@@ -50,10 +72,8 @@ const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Sele
                     styles.option,
                     selectedValue === item.value && styles.selectedOption
                   ]}
-                  onPress={() => {
-                    onValueChange(item.value);
-                    setShowModal(false);
-                  }}
+                  onPress={() => handleOptionPress(item.value)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[
                     styles.optionText,
@@ -84,6 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#f8f9fa',
+    minHeight: 48,
   },
   pickerText: {
     fontSize: 16,
@@ -96,12 +117,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
+    elevation: 5,
+  },
+  overlayTouchable: {
+    flex: 1,
   },
   modalContent: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '60%',
+    elevation: 10,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -115,6 +141,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#2c3e50',
+  },
+  closeButton: {
+    padding: 8,
   },
   optionsList: {
     flex: 1,
