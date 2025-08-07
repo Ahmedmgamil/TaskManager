@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Modal from 'react-native-modal';
+// Modal replaced with React Native built-in Modal
 import TaskListScreen from '../screens/TaskListScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import PomodoroTimer from './PomodoroTimer';
@@ -86,12 +86,10 @@ const Navigation = () => {
 
       {/* Pomodoro Modal */}
       <Modal
-        isVisible={showPomodoroModal}
-        style={styles.pomodoroModal}
-        onBackdropPress={() => setShowPomodoroModal(false)}
-        onSwipeComplete={() => setShowPomodoroModal(false)}
-        swipeDirection={['down']}
-        propagateSwipe={true}
+        visible={showPomodoroModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPomodoroModal(false)}
       >
         <View style={styles.pomodoroModalContent}>
           <PomodoroTimer
@@ -161,15 +159,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  pomodoroModal: {
-    margin: 0,
-    justifyContent: 'flex-end',
-  },
   pomodoroModalContent: {
+    flex: 1,
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '95%',
+    paddingTop: 20,
   },
 });
 

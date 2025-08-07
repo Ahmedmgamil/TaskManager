@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Modal from 'react-native-modal';
+// Modal replaced with React Native built-in Modal
 import TaskItem from '../components/TaskItem';
 import TaskForm from '../components/TaskForm';
 import { useTasks } from '../hooks/useTasks';
@@ -321,18 +322,13 @@ const TaskListScreen = () => {
 
       {/* Task Form Modal */}
       <Modal
-        isVisible={showTaskForm}
-        style={styles.modal}
-        onBackdropPress={() => {
+        visible={showTaskForm}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
           setShowTaskForm(false);
           setEditingTask(null);
         }}
-        onSwipeComplete={() => {
-          setShowTaskForm(false);
-          setEditingTask(null);
-        }}
-        swipeDirection={['down']}
-        propagateSwipe={true}
       >
         <View style={styles.modalContent}>
           <TaskForm
@@ -540,15 +536,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  modal: {
-    margin: 0,
-    justifyContent: 'flex-end',
-  },
   modalContent: {
+    flex: 1,
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
+    paddingTop: 20,
   },
   errorContainer: {
     flexDirection: 'row',

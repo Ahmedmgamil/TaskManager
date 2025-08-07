@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Modal,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
-import Modal from 'react-native-modal';
+// Modal replaced with React Native built-in Modal
+import SimpleCalendar from '../components/SimpleCalendar';
 import TaskItem from '../components/TaskItem';
 import TaskForm from '../components/TaskForm';
 import { useTasks } from '../hooks/useTasks';
@@ -151,32 +152,10 @@ const CalendarScreen = () => {
 
       {/* Calendar */}
       <View style={styles.calendarContainer}>
-        <Calendar
+        <SimpleCalendar
           current={selectedDate}
           onDayPress={handleDayPress}
           markedDates={markedDates}
-          markingType={'multi-dot'}
-          theme={{
-            backgroundColor: '#ffffff',
-            calendarBackground: '#ffffff',
-            textSectionTitleColor: '#2c3e50',
-            selectedDayBackgroundColor: '#3498db',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#3498db',
-            dayTextColor: '#2c3e50',
-            textDisabledColor: '#bdc3c7',
-            dotColor: '#3498db',
-            selectedDotColor: '#ffffff',
-            arrowColor: '#3498db',
-            monthTextColor: '#2c3e50',
-            indicatorColor: '#3498db',
-            textDayFontWeight: '500',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '600',
-            textDayFontSize: 16,
-            textMonthFontSize: 18,
-            textDayHeaderFontSize: 14,
-          }}
         />
       </View>
 
@@ -239,18 +218,13 @@ const CalendarScreen = () => {
 
       {/* Task Form Modal */}
       <Modal
-        isVisible={showTaskForm}
-        style={styles.modal}
-        onBackdropPress={() => {
+        visible={showTaskForm}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
           setShowTaskForm(false);
           setEditingTask(null);
         }}
-        onSwipeComplete={() => {
-          setShowTaskForm(false);
-          setEditingTask(null);
-        }}
-        swipeDirection={['down']}
-        propagateSwipe={true}
       >
         <View style={styles.modalContent}>
           <TaskForm
@@ -266,11 +240,10 @@ const CalendarScreen = () => {
 
       {/* Day Tasks Modal */}
       <Modal
-        isVisible={showDayTasks}
-        style={styles.modal}
-        onBackdropPress={() => setShowDayTasks(false)}
-        onSwipeComplete={() => setShowDayTasks(false)}
-        swipeDirection={['down']}
+        visible={showDayTasks}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDayTasks(false)}
       >
         <View style={styles.dayTasksModal}>
           <View style={styles.dayTasksHeader}>
@@ -424,21 +397,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  modal: {
-    margin: 0,
-    justifyContent: 'flex-end',
-  },
   modalContent: {
+    flex: 1,
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
+    paddingTop: 20,
   },
   dayTasksModal: {
+    flex: 1,
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
     paddingTop: 20,
   },
   dayTasksHeader: {

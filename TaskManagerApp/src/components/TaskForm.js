@@ -10,8 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
+import SimplePicker from './SimplePicker';
+import SimpleDateInput from './SimpleDateInput';
 import {
   TASK_STATUS,
   TASK_PRIORITY,
@@ -37,7 +37,7 @@ const TaskForm = ({
     estimatedTime: '',
   });
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  // showDatePicker removed for mobile compatibility
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -102,12 +102,7 @@ const TaskForm = ({
     }));
   };
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setFormData(prev => ({ ...prev, dueDate: selectedDate }));
-    }
-  };
+  // onDateChange removed - using SimpleDateInput now
 
   if (!visible) return null;
 
@@ -151,70 +146,55 @@ const TaskForm = ({
       {/* Status Picker */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Status</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.status}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-            style={styles.picker}
-          >
-            <Picker.Item label="To Do" value={TASK_STATUS.TODO} />
-            <Picker.Item label="In Progress" value={TASK_STATUS.IN_PROGRESS} />
-            <Picker.Item label="Done" value={TASK_STATUS.DONE} />
-          </Picker>
-        </View>
+        <SimplePicker
+          selectedValue={formData.status}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+          items={[
+            { label: 'To Do', value: TASK_STATUS.TODO },
+            { label: 'In Progress', value: TASK_STATUS.IN_PROGRESS },
+            { label: 'Done', value: TASK_STATUS.DONE },
+          ]}
+          placeholder="Select status"
+        />
       </View>
 
       {/* Priority Picker */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Priority</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.priority}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
-            style={styles.picker}
-          >
-            <Picker.Item label="Low" value={TASK_PRIORITY.LOW} />
-            <Picker.Item label="Medium" value={TASK_PRIORITY.MEDIUM} />
-            <Picker.Item label="High" value={TASK_PRIORITY.HIGH} />
-          </Picker>
-        </View>
+        <SimplePicker
+          selectedValue={formData.priority}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+          items={[
+            { label: 'Low', value: TASK_PRIORITY.LOW },
+            { label: 'Medium', value: TASK_PRIORITY.MEDIUM },
+            { label: 'High', value: TASK_PRIORITY.HIGH },
+          ]}
+          placeholder="Select priority"
+        />
       </View>
 
       {/* Category Picker */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Category</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.category}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-            style={styles.picker}
-          >
-            {Object.values(TASK_CATEGORIES).map(category => (
-              <Picker.Item 
-                key={category.id} 
-                label={category.name} 
-                value={category.id} 
-              />
-            ))}
-          </Picker>
-        </View>
+        <SimplePicker
+          selectedValue={formData.category}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+          items={Object.values(TASK_CATEGORIES).map(category => ({
+            label: category.name,
+            value: category.id
+          }))}
+          placeholder="Select category"
+        />
       </View>
 
       {/* Due Date */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Due Date</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.dateButtonText}>
-            {formData.dueDate 
-              ? formData.dueDate.toLocaleDateString()
-              : 'Select due date'
-            }
-          </Text>
-          <Ionicons name="calendar" size={20} color="#666" />
-        </TouchableOpacity>
+        <SimpleDateInput
+          value={formData.dueDate}
+          onDateChange={(date) => setFormData(prev => ({ ...prev, dueDate: date }))}
+          placeholder="Select due date"
+        />
         
         {formData.dueDate && (
           <TouchableOpacity
@@ -224,33 +204,22 @@ const TaskForm = ({
             <Text style={styles.clearDateText}>Clear date</Text>
           </TouchableOpacity>
         )}
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={formData.dueDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-            minimumDate={new Date()}
-          />
-        )}
       </View>
 
       {/* Recurring Tasks */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Recurring</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.recurring}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, recurring: value }))}
-            style={styles.picker}
-          >
-            <Picker.Item label="None" value={RECURRING_TYPES.NONE} />
-            <Picker.Item label="Daily" value={RECURRING_TYPES.DAILY} />
-            <Picker.Item label="Weekly" value={RECURRING_TYPES.WEEKLY} />
-            <Picker.Item label="Monthly" value={RECURRING_TYPES.MONTHLY} />
-          </Picker>
-        </View>
+        <SimplePicker
+          selectedValue={formData.recurring}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, recurring: value }))}
+          items={[
+            { label: 'None', value: RECURRING_TYPES.NONE },
+            { label: 'Daily', value: RECURRING_TYPES.DAILY },
+            { label: 'Weekly', value: RECURRING_TYPES.WEEKLY },
+            { label: 'Monthly', value: RECURRING_TYPES.MONTHLY },
+          ]}
+          placeholder="Select recurring type"
+        />
       </View>
 
       {/* Estimated Time */}
@@ -366,29 +335,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#f8f9fa',
-  },
-  picker: {
-    height: 50,
-  },
-  dateButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#f8f9fa',
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: '#2c3e50',
-  },
+  // Removed unused picker and date button styles
   clearDateButton: {
     marginTop: 8,
     alignSelf: 'flex-start',
