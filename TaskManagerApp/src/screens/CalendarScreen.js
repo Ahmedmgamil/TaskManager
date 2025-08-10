@@ -30,7 +30,7 @@ const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [showDayTasks, setShowDayTasks] = useState(false);
+  // Removed showDayTasks state - overlay disabled
 
   const getTasksForDate = (date) => {
     return tasks.filter(task => {
@@ -76,10 +76,7 @@ const CalendarScreen = () => {
 
   const handleDayPress = (day) => {
     setSelectedDate(day.dateString);
-    const dayTasks = getTasksForDate(day.dateString);
-    if (dayTasks.length > 0) {
-      setShowDayTasks(true);
-    }
+    // Overlay removed - only set selected date
   };
 
   const handleAddTask = async (taskData) => {
@@ -245,38 +242,7 @@ const CalendarScreen = () => {
         </View>
       </Modal>
 
-      {/* Day Tasks Modal */}
-      <Modal
-        visible={showDayTasks}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowDayTasks(false)}
-      >
-        <View style={styles.dayTasksModal}>
-          <View style={styles.dayTasksHeader}>
-            <Text style={styles.dayTasksTitle}>
-              Tasks for {formatDate(selectedDate)}
-            </Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowDayTasks(false)}
-            >
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={styles.dayTasksList}>
-            {selectedDateTasks.map(task => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onToggleStatus={toggleTaskStatus}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      </Modal>
+      {/* Day Tasks Modal - REMOVED */}
     </View>
   );
 };
