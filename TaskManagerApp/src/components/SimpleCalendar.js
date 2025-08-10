@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,6 +19,21 @@ const SimpleCalendar = ({ current, onDayPress, markedDates = {} }) => {
   ];
   
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Get screen dimensions for responsive design
+  const screenWidth = Dimensions.get('window').width;
+  const isWeb = Platform.OS === 'web';
+  
+  // Calculate calendar width for web to prevent it from being too large
+  const getCalendarWidth = () => {
+    if (isWeb) {
+      return Math.min(screenWidth * 0.9, 400); // Max 400px on web, 90% of screen width
+    }
+    return screenWidth - 32; // Mobile: full width minus margins
+  };
+  
+  const calendarWidth = getCalendarWidth();
+  const daySize = calendarWidth / 7; // 7 days per week
   
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -44,7 +61,16 @@ const SimpleCalendar = ({ current, onDayPress, markedDates = {} }) => {
     // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(
-        <View key={`empty-${i}`} style={styles.dayCell} />
+        <View 
+          key={`empty-${i}`} 
+          style={[
+            styles.dayCell,
+            {
+              width: daySize,
+              height: isWeb ? Math.min(daySize, 50) : daySize,
+            }
+          ]} 
+        />
       );
     }
     
@@ -60,6 +86,10 @@ const SimpleCalendar = ({ current, onDayPress, markedDates = {} }) => {
           key={day}
           style={[
             styles.dayCell,
+            {
+              width: daySize,
+              height: isWeb ? Math.min(daySize, 50) : daySize, // Limit height on web
+            },
             isSelected && styles.selectedDay
           ]}
           onPress={() => onDayPress({ dateString })}
@@ -88,7 +118,7 @@ const SimpleCalendar = ({ current, onDayPress, markedDates = {} }) => {
   };
   
   return (
-    <View style={styles.calendar}>
+    <View style={[styles.calendar, isWeb && { maxWidth: calendarWidth, alignSelf: 'center' }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -113,7 +143,7 @@ const SimpleCalendar = ({ current, onDayPress, markedDates = {} }) => {
       {/* Week days header */}
       <View style={styles.weekHeader}>
         {weekDays.map(day => (
-          <View key={day} style={styles.weekDayCell}>
+          <View key={day} style={[styles.weekDayCell, { width: daySize }]}>
             <Text style={styles.weekDayText}>{day}</Text>
           </View>
         ))}
@@ -151,7 +181,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   weekDayCell: {
-    flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
   },
@@ -165,11 +194,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   dayCell: {
-    width: '14.28%', // 7 days per week
-    aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
+    minHeight: 40, // Minimum height for touch targets
   },
   selectedDay: {
     backgroundColor: '#3498db',

@@ -150,32 +150,37 @@ const CalendarScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Calendar */}
-      <View style={styles.calendarContainer}>
-        <SimpleCalendar
-          current={selectedDate}
-          onDayPress={handleDayPress}
-          markedDates={markedDates}
-        />
-      </View>
-
-      {/* Selected Date Info */}
-      <View style={styles.selectedDateContainer}>
-        <View style={styles.selectedDateHeader}>
-          <Text style={styles.selectedDateText}>
-            {formatDate(selectedDate)}
-          </Text>
-          <TouchableOpacity
-            style={styles.addTaskButton}
-            onPress={() => setShowTaskForm(true)}
-          >
-            <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.addTaskButtonText}>Add Task</Text>
-          </TouchableOpacity>
+      {/* Scrollable Content */}
+      <ScrollView 
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Calendar */}
+        <View style={styles.calendarContainer}>
+          <SimpleCalendar
+            current={selectedDate}
+            onDayPress={handleDayPress}
+            markedDates={markedDates}
+          />
         </View>
 
-        {/* Task Summary */}
-        {selectedDateTasks.length > 0 && (
+        {/* Selected Date Tasks */}
+        <View style={styles.selectedDateContainer}>
+          <View style={styles.selectedDateHeader}>
+            <Text style={styles.selectedDateText}>
+              {formatDate(selectedDate)}
+            </Text>
+            <TouchableOpacity
+              style={styles.addTaskButton}
+              onPress={() => setShowTaskForm(true)}
+            >
+              <Ionicons name="add" size={16} color="white" />
+              <Text style={styles.addTaskButtonText}>Add Task</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Task Summary */}
           <View style={styles.taskSummary}>
             <View style={styles.summaryItem}>
               <View style={[styles.summaryDot, { backgroundColor: '#e74c3c' }]} />
@@ -190,30 +195,32 @@ const CalendarScreen = () => {
               <Text style={styles.summaryText}>{statusCounts.done} Done</Text>
             </View>
           </View>
-        )}
-      </View>
+        </View>
 
-      {/* Tasks for Selected Date */}
-      <ScrollView style={styles.tasksContainer} showsVerticalScrollIndicator={false}>
-        {selectedDateTasks.length > 0 ? (
-          selectedDateTasks.map(task => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggleStatus={toggleTaskStatus}
-              onEdit={handleEditTask}
-              onDelete={handleDeleteTask}
-            />
-          ))
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={64} color="#bdc3c7" />
-            <Text style={styles.emptyTitle}>No tasks for this date</Text>
-            <Text style={styles.emptySubtitle}>
-              Tap "Add Task" to create a task for {formatDate(selectedDate)}
-            </Text>
-          </View>
-        )}
+        {/* Tasks List */}
+        <View style={styles.tasksContainer}>
+          {selectedDateTasks.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="calendar-outline" size={64} color="#bdc3c7" />
+              <Text style={styles.emptyTitle}>No tasks for this date</Text>
+              <Text style={styles.emptySubtitle}>
+                Tap "Add Task" to create a new task for {formatDate(selectedDate)}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.tasksList}>
+              {selectedDateTasks.map(task => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggleStatus={toggleTaskStatus}
+                  onEdit={handleEditTask}
+                  onDelete={handleDeleteTask}
+                />
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       {/* Task Form Modal */}
@@ -278,6 +285,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
@@ -373,15 +386,18 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   tasksContainer: {
-    flex: 1,
     marginTop: 16,
+    minHeight: 200, // Ensure minimum height for content
+  },
+  tasksList: {
+    paddingHorizontal: 16,
   },
   emptyContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
     paddingVertical: 64,
+    minHeight: 200,
   },
   emptyTitle: {
     fontSize: 20,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,27 +7,84 @@ import {
   Modal,
   ScrollView,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Select an option' }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const slideAnim = useRef(new Animated.Value(0)).current;
   
-  const selectedItem = items.find(item => item.value === selectedValue);
+  // Close dropdown when component unmounts or when another picker opens
+  React.useEffect(() => {
+    return () => {
+      if (showDropdown) {
+        setShowDropdown(false);
+      }
+    };
+  }, []);
+  
+  // More robust value matching - handle string/type mismatches
+  const selectedItem = items.find(item => {
+    // Try exact match first
+    if (item.value === selectedValue) return true;
+    // Try string comparison as fallback
+    if (String(item.value) === String(selectedValue)) return true;
+    return false;
+  });
+  
+  // Debug logging
+  console.log('SimplePicker Debug:');
+  console.log('- selectedValue:', selectedValue, typeof selectedValue);
+  console.log('- items:', items.map(item => ({ label: item.label, value: item.value, type: typeof item.value })));
+  console.log('- selectedItem:', selectedItem);
+  
+  // Additional validation
+  if (selectedValue && !selectedItem) {
+    console.warn('SimplePicker: No matching item found for selectedValue:', selectedValue);
+    console.warn('Available values:', items.map(item => item.value));
+  }
 
   const handlePress = () => {
-    console.log('SimplePicker: Button pressed');
+    console.log('SimplePicker: Button pressed, Platform:', Platform.OS);
+    console.log('SimplePicker: Items:', items);
+    console.log('SimplePicker: Selected value:', selectedValue, typeof selectedValue);
+    console.log('SimplePicker: Selected item found:', selectedItem);
+    
+    // Use modal for all platforms to ensure proper layering
     setShowModal(true);
+  };
+  
+  const openDropdown = () => {
+    setShowDropdown(true);
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
+  
+  const closeDropdown = () => {
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start(() => {
+      setShowDropdown(false);
+    });
   };
 
   const handleOptionPress = (value) => {
     console.log('SimplePicker: Option selected:', value);
+    console.log('SimplePicker: Calling onValueChange with:', value);
     onValueChange(value);
     setShowModal(false);
   };
   
   return (
-    <View>
+    <View style={styles.pickerContainer}>
       <TouchableOpacity
         style={styles.pickerButton}
         onPress={handlePress}
@@ -36,23 +93,29 @@ const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Sele
         <Text style={[styles.pickerText, !selectedItem && styles.placeholder]}>
           {selectedItem ? selectedItem.label : placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={20} color="#666" />
+        <Ionicons 
+          name={showDropdown ? "chevron-up" : "chevron-down"} 
+          size={20} 
+          color="#666" 
+        />
       </TouchableOpacity>
       
+      {/* Modal for all platforms */}
       <Modal
         visible={showModal}
-        transparent
-        animationType="slide"
+        transparent={Platform.OS !== 'android'}
+        animationType={Platform.OS === 'android' ? 'none' : 'slide'}
         onRequestClose={() => setShowModal(false)}
-        statusBarTranslucent={true}
+        statusBarTranslucent={Platform.OS === 'android'}
+        presentationStyle={Platform.OS === 'android' ? 'overFullScreen' : undefined}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, Platform.OS === 'android' && styles.androidModalOverlay]}>
           <TouchableOpacity 
             style={styles.overlayTouchable}
             activeOpacity={1}
             onPress={() => setShowModal(false)}
           />
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, Platform.OS === 'android' && styles.androidModalContent]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{placeholder}</Text>
               <TouchableOpacity 
@@ -70,18 +133,18 @@ const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Sele
                   key={item.value}
                   style={[
                     styles.option,
-                    selectedValue === item.value && styles.selectedOption
+                    (selectedValue === item.value || String(selectedValue) === String(item.value)) && styles.selectedOption
                   ]}
                   onPress={() => handleOptionPress(item.value)}
                   activeOpacity={0.7}
                 >
                   <Text style={[
                     styles.optionText,
-                    selectedValue === item.value && styles.selectedOptionText
+                    (selectedValue === item.value || String(selectedValue) === String(item.value)) && styles.selectedOptionText
                   ]}>
                     {item.label}
                   </Text>
-                  {selectedValue === item.value && (
+                  {(selectedValue === item.value || String(selectedValue) === String(item.value)) && (
                     <Ionicons name="checkmark" size={20} color="#3498db" />
                   )}
                 </TouchableOpacity>
@@ -95,6 +158,10 @@ const SimplePicker = ({ selectedValue, onValueChange, items, placeholder = 'Sele
 };
 
 const styles = StyleSheet.create({
+  pickerContainer: {
+    position: 'relative',
+    zIndex: 1000,
+  },
   pickerButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -113,11 +180,68 @@ const styles = StyleSheet.create({
   placeholder: {
     color: '#999',
   },
+  dropdownContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 999999,
+    elevation: 50,
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    maxHeight: 200,
+    elevation: 100,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    zIndex: 999999,
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f1f1',
+    backgroundColor: 'white',
+    zIndex: 999999,
+    elevation: 100,
+  },
+  lastDropdownOption: {
+    borderBottomWidth: 0,
+  },
+  selectedDropdownOption: {
+    backgroundColor: '#e3f2fd',
+  },
+  dropdownOptionText: {
+    fontSize: 16,
+    color: '#2c3e50',
+  },
+  selectedDropdownOptionText: {
+    color: '#3498db',
+    fontWeight: '600',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
     elevation: 5,
+  },
+  androidModalOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   overlayTouchable: {
     flex: 1,
@@ -128,6 +252,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     maxHeight: '60%',
     elevation: 10,
+  },
+  androidModalContent: {
+    borderRadius: 12,
+    maxHeight: '50%',
+    minWidth: '80%',
+    maxWidth: '90%',
+    elevation: 20,
   },
   modalHeader: {
     flexDirection: 'row',
