@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Modal,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { 
@@ -22,15 +24,30 @@ const TaskItem = ({
   onDelete,
   onPress 
 }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const handleDelete = () => {
-    Alert.alert(
-      'Delete Task',
-      'Are you sure you want to delete this task?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) }
-      ]
-    );
+    if (Platform.OS === 'web') {
+      setShowDeleteModal(true);
+    } else {
+      Alert.alert(
+        'Delete Task',
+        'Are you sure you want to delete this task?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) }
+        ]
+      );
+    }
+  };
+
+  const confirmDelete = () => {
+    setShowDeleteModal(false);
+    onDelete(task.id);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
   };
 
   const getStatusIcon = () => {
@@ -43,6 +60,19 @@ const TaskItem = ({
         return 'checkmark-circle';
       default:
         return 'radio-button-off';
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (task.status) {
+      case TASK_STATUS.TODO:
+        return 'To Do';
+      case TASK_STATUS.IN_PROGRESS:
+        return 'In Progress';
+      case TASK_STATUS.DONE:
+        return 'Done';
+      default:
+        return 'To Do';
     }
   };
 
@@ -86,24 +116,30 @@ const TaskItem = ({
   const dueDateInfo = getDueDateInfo();
 
   return (
-    <TouchableOpacity 
-      style={[
-        styles.container,
-        task.status === TASK_STATUS.DONE && styles.completedTask
-      ]}
-      onPress={() => onPress && onPress(task)}
-      activeOpacity={0.7}
-    >
+    <>
+      <TouchableOpacity 
+        style={[
+          styles.container,
+          task.status === TASK_STATUS.DONE && styles.completedTask
+        ]}
+        onPress={() => onPress && onPress(task)}
+        activeOpacity={0.7}
+      >
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.statusButton}
           onPress={() => onToggleStatus(task.id)}
         >
-          <Ionicons
-            name={getStatusIcon()}
-            size={24}
-            color={STATUS_COLORS[task.status]}
-          />
+          <View style={styles.statusContainer}>
+            <Ionicons
+              name={getStatusIcon()}
+              size={24}
+              color={STATUS_COLORS[task.status]}
+            />
+            <Text style={[styles.statusLabel, { color: STATUS_COLORS[task.status] }]}>
+              {getStatusLabel()}
+            </Text>
+          </View>
         </TouchableOpacity>
         
         <View style={styles.taskContent}>
@@ -173,6 +209,41 @@ const TaskItem = ({
         </View>
       </View>
     </TouchableOpacity>
+
+    {/* Delete Confirmation Modal for Web */}
+    <Modal
+      visible={showDeleteModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={cancelDelete}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Delete Task</Text>
+          <Text style={styles.modalMessage}>
+            Are you sure you want to delete this task?
+          </Text>
+          <Text style={styles.modalTaskTitle}>"{task.title}"</Text>
+          
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={cancelDelete}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={confirmDelete}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  </>
   );
 };
 
@@ -202,6 +273,15 @@ const styles = StyleSheet.create({
   statusButton: {
     marginRight: 12,
     marginTop: 2,
+  },
+  statusContainer: {
+    alignItems: 'center',
+  },
+  statusLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+    textAlign: 'center',
   },
   taskContent: {
     flex: 1,
@@ -286,6 +366,80 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    margin: 20,
+    minWidth: 300,
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 8,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalTaskTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 20,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#ecf0f1',
+    borderWidth: 1,
+    borderColor: '#bdc3c7',
+  },
+  deleteButton: {
+    backgroundColor: '#e74c3c',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
   },
 });
 
